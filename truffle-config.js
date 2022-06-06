@@ -37,8 +37,7 @@ module.exports = {
 
   plugins: ["truffle-plugin-verify"],
   api_keys: {
-    etherscan: process.env.ETHERSCAN_API_KEY,
-    polygonscan: process.env.POLYGONSCAN_API_KEY,
+    etherscan: process.env.ETHERSCAN_API_KEY
   },
 
   networks: {
@@ -65,7 +64,7 @@ module.exports = {
     // Useful for deploying to a public network.
     // NB: It's important to wrap the provider as a function.
     ropsten: {
-      provider: () => new HDWalletProvider(mnemonic, `https://ropsten.infura.io/v3/0e42c582d71b4ba5a8750f688fce07da`),
+      provider: () => new HDWalletProvider(mnemonic, `https://ropsten.infura.io/v3/${process.env.INFURA_ID}`),
       network_id: 3,       // Ropsten's id
       gas: 5500000,        // Ropsten has a lower block limit than mainnet
       confirmations: 2,    // # of confs to wait between deployments. (default: 0)
