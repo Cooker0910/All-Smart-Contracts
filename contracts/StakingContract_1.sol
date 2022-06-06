@@ -138,7 +138,7 @@ library Counters {
 
 
 
-contract Staking is Ownable {
+contract Staking1 is Ownable {
     using SafeMath for uint256;
     using Counters for Counters.Counter;
     using Array for uint256[];

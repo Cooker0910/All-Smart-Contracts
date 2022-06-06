@@ -1,5 +1,6 @@
 var HelloWorld = artifacts.require("HelloWorld")
+var Staking1 = artifacts.require("Staking1");
 
 module.exports = function(deployer) {
-  deployer.deploy(HelloWorld, "Hello");
+  deployer.deploy(Staking1, "Hello");
 }
