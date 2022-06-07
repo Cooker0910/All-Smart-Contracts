@@ -1,5 +1,5 @@
-var Staking1 = artifacts.require('Staking1');
+var DGTLZStaking = artifacts.require('DGTLZStaking');
 
 module.exports = function(deployer) {
-  deployer.deploy(Staking1)
+  deployer.deploy(DGTLZStaking)
 }
