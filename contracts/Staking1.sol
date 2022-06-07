@@ -342,6 +342,7 @@ contract DGTLZStaking is Ownable {
   uint256 private totalRewardAmount;
   uint256 private totalAmount_;
   uint256 private unStakableAmount;
+  uint256 currentTime;
   uint256 private level;
   uint256 private decimals = 10 ** 18;
   uint256 private _maxWETHToSpend;
@@ -351,40 +352,43 @@ contract DGTLZStaking is Ownable {
   uint256 private _perTxWethAmount;
   mapping(address => bool) internal stakeholders;
 
-
   struct StakeHolder{
     uint256 stakingBalance;
     uint256 stakingDate;
     uint256 stakingDuration;
     uint256 claimDate;
+    uint256 expireDate;
     uint256 rewardAmount;
     uint256 level;
     bool claimStatus;
+    bool isStaker;
   }
 
 
-  mapping(address => StakeHolder) public stakeHolders;
+  mapping(address => mapping(uint => StakeHolder)) public stakeHolders;
 
   uint internal _amountLevel;
-  uint[] internal stakePeriod = [30 days, 90 days, 180 days, 365 days];
+  uint[] internal stakePeriod = [30 seconds, 90 seconds, 180 seconds, 365 seconds];
   uint[12] internal rate = [0, 10, 20, 20, 40, 55, 55, 85, 115, 130, 210, 250];
 
   function staking(uint _amount, uint _duration) external {
     require(_amount <= BUSD.balanceOf(msg.sender), "Not enough BUSD token to stake");
     require(_amount >= 500 , "Insufficient Stake Amount");
-    require(_duration == 1 || _duration == 3 || _duration == 6 || _duration == 12, "Duration not match");
+    require(_duration < 4, "Duration not match");
 
     if(_amount >= 500 && _amount < 2000) _amountLevel = 1;
     else if(_amount >= 2000&& _amount <= 5000) _amountLevel = 2;
     else _amountLevel = 3;
 
-    StakeHolder storage s = stakeHolders[msg.sender];
-    s.stakingBalance += _amount;
+    StakeHolder storage s = stakeHolders[msg.sender][_duration];
+    s.stakingBalance = _amount;
     s.stakingDate = block.timestamp;
     s.claimDate = block.timestamp;
-    s.stakingDuration = _duration * 30 * 1 seconds;
+    s.stakingDuration = stakePeriod[_duration];
+    s.expireDate = s.stakingDate + s.stakingDuration;
+    s.isStaker = true;
 
-    if(_duration == 1 && _amountLevel == 1) s.level = 0;   
+    if(_duration == 1 && _amountLevel == 1) s.level = 0;
     if(_duration == 1 && _amountLevel == 2) s.level = 1; 
     if(_duration == 1 && _amountLevel == 3) s.level = 2;
     if(_duration == 3 && _amountLevel == 1) s.level = 3;
@@ -402,24 +406,21 @@ contract DGTLZStaking is Ownable {
     totalStakeAmount += _amount;
   }
 
-  function TokenApprove(uint256 _amount) external returns(bool){
-    return BUSD.approve(address(this), _amount * decimals);
-  }
-
-  function _calcReward() internal returns(uint256 reward) {
-    StakeHolder storage s = stakeHolders[msg.sender];
-    uint256 _pastTime = block.timestamp - s.claimDate;
-    if (_pastTime > s.stakingDuration) _pastTime = s.stakingDuration;
-    bool status = _pastTime > 7 seconds;
+  function _calcReward(uint256 _duration) internal returns(uint256 reward) {
+    StakeHolder storage s = stakeHolders[msg.sender][_duration];
+    if(block.timestamp >= s.expireDate) currentTime = s.expireDate;
+    else currentTime = block.timestamp;
+    uint256 _pastTime = currentTime - s.claimDate;
+    bool status = (block.timestamp-s.claimDate) > 7 seconds;
     reward = _pastTime.mul(s.stakingBalance).mul(rate[s.level]).div(1000).div(s.stakingDuration);
     s.claimStatus = status;
   }
 
-  function claim() public {
-    StakeHolder storage s = stakeHolders[msg.sender];
-    uint256 rewardAmount = _calcReward();
+  function claim(uint256 _duration) public {
+    StakeHolder storage s = stakeHolders[msg.sender][_duration];
+    uint256 rewardAmount = _calcReward(_duration);
     require(s.claimStatus == true, "Invalid Claim Date");
-    BUSD.transfer(msg.sender, rewardAmount);
+    BUSD.transfer(msg.sender, rewardAmount * decimals);
     s.claimDate = block.timestamp;
   }
 

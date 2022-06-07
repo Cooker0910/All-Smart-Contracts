@@ -1,5 +1,5 @@
-var TestERC20 = artifacts.require("TestERC20")
+var Staking1 = artifacts.require('Staking1');
 
 module.exports = function(deployer) {
-  deployer.deploy(TestERC20)
+  deployer.deploy(Staking1)
 }
