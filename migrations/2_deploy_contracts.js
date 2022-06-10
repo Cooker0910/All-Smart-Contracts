@@ -1,5 +1,5 @@
-var DGTLZStaking = artifacts.require('DGTLZStaking');
+var EXO = artifacts.require('EXO');
 
 module.exports = function(deployer) {
-  deployer.deploy(DGTLZStaking)
+  deployer.deploy(EXO)
 }
